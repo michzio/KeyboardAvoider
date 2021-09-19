@@ -34,6 +34,7 @@
 		8454D2892460688800A685DE /* KeyboardAvoider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardAvoider.swift; sourceTree = "<group>"; };
 		8454D28B246068BB00A685DE /* KeyboardAvoiderPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardAvoiderPreferences.swift; sourceTree = "<group>"; };
 		8454D28D246068CF00A685DE /* KeyboardAvoiding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardAvoiding.swift; sourceTree = "<group>"; };
+		8C5A4CF026F4E10C00F74F63 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +51,7 @@
 		8454D2632460628E00A685DE = {
 			isa = PBXGroup;
 			children = (
+				8C5A4CF026F4E10C00F74F63 /* Package.swift */,
 				8454D26E2460628E00A685DE /* KeyboardAvoider */,
 				8454D26D2460628E00A685DE /* Products */,
 			);
