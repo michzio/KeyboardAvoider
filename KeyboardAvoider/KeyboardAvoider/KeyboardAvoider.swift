@@ -14,13 +14,13 @@ final class KeyboardAvoider : ObservableObject {
     
     private var _rects = [Int: CGRect]() {
         didSet {
-            print("Keyboard Avoider rects changed: \(_rects.count)")
+            debugPrint("Keyboard Avoider rects changed: \(_rects.count)")
         }
     }
     var rects: [Int: CGRect] {
         set {
             guard keyboardRect == .zero else {
-                print("Warning: Keyboard Avoider changing rects while keyboard is visible.")
+                debugPrint("Warning: Keyboard Avoider changing rects while keyboard is visible.")
                 return
             }
             _rects = newValue
@@ -48,44 +48,42 @@ final class KeyboardAvoider : ObservableObject {
             updateSlideSize()
         }
     }
-    //private var isKeyboardHidden: Bool = true
     
     private var keyboardWillShow : Cancellable? = nil
     private var keyboardWillHide : Cancellable? = nil
     
     init() {
-        print("Keyboard Avoider init")
+        debugPrint("Keyboard Avoider init")
         
         self.keyboardWillShow = NotificationCenter.default
-        .publisher(for: UIResponder.keyboardWillShowNotification)
-        .map { (notification) -> CGRect in
-            self.isInitialized = true
-            if let rect = notification.userInfo?["UIKeyboardFrameEndUserInfoKey"] as? CGRect {
-                return rect
-            } else {
-                return .zero
+            .publisher(for: UIResponder.keyboardWillShowNotification)
+            .map { (notification) -> CGRect in
+                self.isInitialized = true
+                if let rect = notification.userInfo?["UIKeyboardFrameEndUserInfoKey"] as? CGRect {
+                    return rect
+                } else {
+                    return .zero
+                }
             }
-        }
-        .receive(on: RunLoop.main)
-        .assign(to: \.keyboardRect, on: self)
+            .receive(on: RunLoop.main)
+            .assign(to: \.keyboardRect, on: self)
         
         self.keyboardWillHide = NotificationCenter.default
-        .publisher(for: UIResponder.keyboardWillHideNotification)
-        .map {_ -> CGRect in .zero }
-        .receive(on: RunLoop.main)
-        .eraseToAnyPublisher()
-        .assign(to: \.keyboardRect, on: self)
+            .publisher(for: UIResponder.keyboardWillHideNotification)
+            .map {_ -> CGRect in .zero }
+            .receive(on: RunLoop.main)
+            .eraseToAnyPublisher()
+            .assign(to: \.keyboardRect, on: self)
     }
     
     deinit {
-        print("Keyboard Avoider deinit")
+        debugPrint("Keyboard Avoider deinit")
         
         self.keyboardWillShow?.cancel()
         self.keyboardWillHide?.cancel()
     }
     
     private func updateSlideSize() {
-        
         guard let fieldRect = self.rects[editingField] else {
             slideSize = .zero
             slideSizePublisher.send(.zero)
@@ -99,22 +97,19 @@ final class KeyboardAvoider : ObservableObject {
         }
         
         let diff = fieldRect.maxY - keyboardRect.minY + 48
-    
+
         if keyboardRect.minY < fieldRect.maxY + 48 {
-             slideSize = CGSize(width: 0, height: -diff)
-             slideSizePublisher.send(CGSize(width: 0, height: -diff))
+            slideSize = CGSize(width: 0, height: -diff)
+            slideSizePublisher.send(CGSize(width: 0, height: -diff))
         } else {
             slideSize = .zero
             slideSizePublisher.send(.zero)
         }
     }
-  
 }
 
 extension KeyboardAvoider {
-    
     func keyboardOffsets(isTabBar: Bool = true, offset: CGFloat = 0) -> (total: CGFloat, adjusted: CGFloat) {
-        
         let tabBarHeight = isTabBar ? UITabBarController().tabBar.frame.height : 0
         let safeAreaHeight = UIApplication.shared.windows.first{ $0.isKeyWindow }?.safeAreaInsets.bottom ?? 0
         let totalKeyboardOffset = self.keyboardRect.height
@@ -125,24 +120,19 @@ extension KeyboardAvoider {
 }
 
 extension List {
-    
     func attachKeyboardAvoider(_ keyboardAvoider: KeyboardAvoider, offset: CGFloat = 0) -> some View {
-    
         let (total, adjusted) = keyboardAvoider.keyboardOffsets(offset: offset)
-        
-       return self
-        .padding(.bottom, total > 0 ? adjusted + 32 : 0)
+        return self
+            .padding(.bottom, total > 0 ? adjusted + 32 : 0)
     }
     
     func attachKeyboardAvoiderPublisher(_ keyboardAvoider: KeyboardAvoider, offset: CGFloat = 0) -> some View {
-        
-        return self.modifier(AttachedKeyboardAvoider(keyboardAvoider, offset: offset))
+        modifier(AttachedKeyboardAvoider(keyboardAvoider, offset: offset))
     }
 }
 
 
 struct AttachedKeyboardAvoider : ViewModifier {
-    
     @State var total : CGFloat = 0
     @State var adjusted : CGFloat = 0
     
@@ -155,33 +145,29 @@ struct AttachedKeyboardAvoider : ViewModifier {
     }
     
     func body(content: Content) -> some View {
-        
+
         content
-        .padding(.bottom, total > 0 ? adjusted + 32 : 0)
-        .onReceive(avoider.slideSizePublisher) { size in
-            
-            let (total, adjusted) = self.avoider.keyboardOffsets(offset: self.offset)
-            print("Total: \(total), adjusted: \(adjusted) keyboard bottom padding.")
-            DispatchQueue.main.async {
-                self.total = total
-                self.adjusted = adjusted
+            .padding(.bottom, total > 0 ? adjusted + 32 : 0)
+            .onReceive(avoider.slideSizePublisher) { size in
+
+                let (total, adjusted) = self.avoider.keyboardOffsets(offset: self.offset)
+                debugPrint("Total: \(total), adjusted: \(adjusted) keyboard bottom padding.")
+                DispatchQueue.main.async {
+                    self.total = total
+                    self.adjusted = adjusted
+                }
             }
-        }
     }
 }
 
 extension ScrollView {
-    
     func attachKeyboardAvoider(_ keyboardAvoider: KeyboardAvoider, offset: CGFloat = 0) -> some View {
-    
         let (total, adjusted) = keyboardAvoider.keyboardOffsets(offset: offset)
-        
-       return self
-        .padding(.bottom, total > 0 ? adjusted + 32 : 0)
+        return self
+            .padding(.bottom, total > 0 ? adjusted + 32 : 0)
     }
     
     func attachKeyboardAvoiderPublisher(_ keyboardAvoider: KeyboardAvoider, offset: CGFloat = 0) -> some View {
-        
         return self.modifier(AttachedKeyboardAvoider(keyboardAvoider, offset: offset))
     }
 }
